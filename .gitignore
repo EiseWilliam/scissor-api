@@ -6,3 +6,10 @@ venv/
 /ref2
 /ref3
 /ref4
+
+
+# ignore all pycahe files
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+*.pyc
