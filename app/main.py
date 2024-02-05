@@ -28,7 +28,7 @@ async def welcome():
 
 @app.get("/404/")
 async def not_found(request: Request):
-    return templates.TemplateResponse("404.html", {"request": request})
+    return templates.TemplateResponse("404.jinja", {"request": request})
 
 # test mongodb connection
 @app.get("/test")

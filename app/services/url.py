@@ -1,14 +1,49 @@
+from tkinter import N
 from bson import ObjectId
+from fastapi import Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from app.core.logging import log_this
 
+from app.core.exceptions import ConflictException, NotFoundException
+from app.core.logging import log_this
 from app.core.utils.url import hash_url
+from app.schemas.url import UrlAnalyticsResponse
 from app.services.base_crud import BaseCRUD
 
 
 class UrlHandler(BaseCRUD):
     def __init__(self, db_conn: AsyncIOMotorDatabase):
         super().__init__(db_conn, "urls")
+
+    async def track_click(
+        self, short_url: str, original_url: str, request: Request, timestamp: str, **kwargs
+    ):
+        referer = request.headers.get("Referer")
+        browser = request.headers.get("User-Agent")
+        ip_address = request.client.host if request.client else None
+
+        log_this(f"Tracking click for {short_url}, Referer: {referer} Timestamp: {timestamp}")
+        await self._db_conn.get_collection("analytics").insert_one(
+            {
+                "_id": short_url,
+                "short_url": short_url,
+                "referer": referer,
+                "timestamp": timestamp,
+                "ip_address": ip_address,
+                "browser": browser,
+                "original_url": original_url,
+                **kwargs,
+            }
+        )
+
+    async def get_url_analytics(self, short_url: str) -> UrlAnalyticsResponse:
+        result = await self._db_conn.get_collection("analytics").find({"short_url": short_url}).to_list(None)
+        if result:
+            return UrlAnalyticsResponse(
+                activities=result,
+                total_clicks=len(result),
+                last_clicked=result[-1].get("timestamp") if result else None,
+            )
+        raise NotFoundException(f"No analytics found for {short_url}")
 
     async def get_user_urls(self, user_id: str):
         return await self._db_conn.get_collection(self._collection).find({"user_id": user_id}).to_list(None)
@@ -20,7 +55,13 @@ class UrlHandler(BaseCRUD):
             return doc["original_url"]
         log_this(f"No original URL found for {short_url}")
 
-    async def shorten_url(self, user_id: str | ObjectId, original_url: str):
+    async def shorten_url(self, user_id: str | ObjectId, original_url: str, custom_alias: str | None = None):
+        if custom_alias:
+            short_url = custom_alias
+            collides = await self.collision_check(short_url)
+            if collides:
+                raise ConflictException(f"Custom alias {short_url} is not available.")
+            return short_url
         short_url = await self._generate_short_url(original_url)
         await self.create({"user_id": user_id, "original_url": original_url, "short_url": short_url})
         return short_url
@@ -35,10 +76,12 @@ class UrlHandler(BaseCRUD):
         else:
             return short_url
 
-
     async def collision_check(self, short_url: str) -> bool:
         log_this(f"Checking for collision with {short_url}")
         return (
             await self._db_conn.get_collection(self._collection).find_one({"short_url": short_url})
             is not None
         )
+
+
+_ANALYTICS_AGGREGATE = [{"$group": {"_id": "$short_url", "count": {"$sum": 1}}}]
