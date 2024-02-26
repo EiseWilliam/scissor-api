@@ -36,7 +36,7 @@ class RedisSettings(BaseSettings):
 
 
 class MONGOSettings(BaseSettings):
-    MONGO_URI: str = config("MONGO_URI", default="mongodb://localhost:27017")
+    MONGO_URI: str = config("MONGO_URI", default="mongodb://localhost:27017/")
     MONGO_DB: str = config("MONGO_DB", default="scissor")
     MONGO_USER: str | None = config("MONGO_USER", default=None)
     MONGO_PASS: str | None = config("MONGO_PASS", default=None)
