@@ -1,3 +1,4 @@
+from datetime import datetime
 import requests
 from fastapi import Request
 from redis import Redis
@@ -6,7 +7,7 @@ from user_agents import parse
 from app.core.exceptions import NotFoundException
 from app.core.logging import log_this
 from app.schemas.url import UrlAnalyticsResponse
-from app.services.pipelines import (
+from app.services.data.pipelines import (
     gen_countries_and_cities_pipeline,
     gen_overview_pipeline,
     gen_referrer_pipeline,
@@ -97,7 +98,7 @@ class AnalyticsEngine:
         return location
 
     async def track_click(
-        self, short_url: str, original_url: str, request: Request, timestamp: str, **kwargs
+        self, short_url: str, original_url: str, request: Request, timestamp: datetime, **kwargs
     ) -> None:
         referer = request.headers.get("Referer")
         user_agent_string = request.headers.get("User-Agent")
@@ -111,7 +112,7 @@ class AnalyticsEngine:
         # update cache
         self.redis.hincrby(f"analytic:{short_url}", "clicks", 1)
         self.redis.hincrby(f"analytic:{short_url}", "total_activites", 1)
-        self.redis.hset(f"analytic:{short_url}", "last_clicked", timestamp)
+        self.redis.hset(f"analytic:{short_url}", "last_clicked", timestamp.isoformat())
 
         # update db
         await self._db_conn.get_collection("analytics").insert_one(

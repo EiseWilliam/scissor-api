@@ -66,3 +66,36 @@ def gen_countries_and_cities_pipeline(short_url: str):
         {"$project": {"_id": 0, "countries": 1}},
     ]
     return pipeline
+
+
+def gen_timeseries_pipeline(short_url: str):
+    pipeline = [
+        {"$match": {"short_url": short_url, "timestamp": {"$exists": True, "$type": "date"}}},
+        {
+            "$group": {
+                "_id": {
+                    "year": {"$year": "$timestamp"},
+                    "month": {"$month": "$timestamp"},
+                    "day": {"$dayOfMonth": "$timestamp"},
+                    "hour": {"$hour": "$timestamp"},
+                },
+                "count": {"$sum": 1},
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "date": {
+                    "$dateFromParts": {
+                        "year": "$_id.year",
+                        "month": "$_id.month",
+                        "day": "$_id.day",
+                        "hour": "$_id.hour",
+                    }
+                },
+                "count": 1,
+            }
+        },
+        {"$sort": {"date": 1}},
+    ]
+    return pipeline
