@@ -9,7 +9,7 @@ from app.db.database import db as simple_db
 from app.schemas.user import ReadUser
 from app.services.url import UrlHandler
 from app.services.user import UserHandler
-
+from app.services.analytics import AnalyticsEngine
 
 def get_db() -> AsyncIOMotorDatabase:
     return simple_db
@@ -29,9 +29,12 @@ user_handler = Annotated[UserHandler, Depends(get_user_handler)]
 def get_url_handler(db: db) -> UrlHandler:
     return UrlHandler(db)
 
+def get_analytics_engine(db: db) -> AnalyticsEngine:
+    return AnalyticsEngine(db)
+
+analytic_engine = Annotated[AnalyticsEngine, Depends(get_analytics_engine)]
 
 url_handler = Annotated[UrlHandler, Depends(get_url_handler)]
-
 
 async def get_jwt(token: str = Depends(oauth2_scheme), token2: str = Depends(cookie_scheme)) -> Any:
     if token:
