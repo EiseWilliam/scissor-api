@@ -16,6 +16,8 @@ class AppSettings(BaseSettings):
     CONTACT_NAME: str | None = config("CONTACT_NAME", default=None)
     CONTACT_EMAIL: str | None = config("CONTACT_EMAIL", default=None)
 
+class AnalyticsSettings(BaseSettings):
+    AGGREGATION_INTERVAL : int = config("AGGREGATION_INTERVAL", default=60) # in minutes
 
 class ShortServiceSettings(BaseSettings):
     CACHE_MAP_URLS: bool = config("MAP_URLS", default=True)
@@ -37,7 +39,7 @@ class RedisSettings(BaseSettings):
 
 class MONGOSettings(BaseSettings):
     MONGO_URI: str = config("MONGO_URI", default="mongodb://localhost:27017/")
-    MONGO_DB: str = config("MONGO_DB", default="scissor")
+    MONGO_DB: str = config("MONGO_DB", default="DB")
     MONGO_USER: str | None = config("MONGO_USER", default=None)
     MONGO_PASS: str | None = config("MONGO_PASS", default=None)
 
@@ -49,7 +51,7 @@ class FirstUserSettings(BaseSettings):
     ADMIN_PASSWORD: str = config("ADMIN_PASSWORD", default="!Ch4ng3Th1sP4ssW0rd!")
 
 
-class Settings(AppSettings, ShortServiceSettings, MONGOSettings, RedisSettings, CryptSettings, FirstUserSettings):
+class Settings(AppSettings, ShortServiceSettings, MONGOSettings, RedisSettings, CryptSettings, FirstUserSettings, AnalyticsSettings):
     pass
 
 

@@ -3,6 +3,7 @@ from typing import Any
 from bson import ObjectId
 from linkpreview import link_preview
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from redis.asyncio import Redis
 
 from app.core.exceptions import ConflictException, NotFoundException
 from app.core.logging import log_this
@@ -14,9 +15,12 @@ from app.services.base_crud import BaseCRUD
 class UrlHandler(BaseCRUD):
     def __init__(self, db_conn: AsyncIOMotorDatabase):  # type: ignore
         super().__init__(db_conn, "urls")
+        self.redis = Redis()
 
 
-    async def get_url_analytics(self, short_url: str) -> UrlAnalyticsResponse:
+    async def get_url_quickinfo(self, short_url: str) -> dict[str, Any]:
+        pass
+    async def get_url_stats(self, short_url: str) -> UrlAnalyticsResponse:
         result = await self._db_conn.get_collection("analytics").find({"short_url": short_url}).to_list(None)
         if result:
             return UrlAnalyticsResponse(
@@ -31,18 +35,30 @@ class UrlHandler(BaseCRUD):
             urls = await self._db_conn.get_collection(self._collection).find({"user_id": user_id}).to_list(None)
         )
 
+    async def _cache_url_mapping(self, short_url: str, original_url: str) -> None:
+        await self.redis.set(short_url, original_url)
+        
+    async def _url_from_cache(self, short_url: str) -> str:
+        return await self.redis.get(short_url)
+
     async def get_original_url(self, short_url: str):
-        log_this(f"Getting original URL for {short_url}")
-        doc = await self._db_conn.get_collection(self._collection).find_one({"short_url": short_url})
-        if doc:
-            return doc["original_url"]
+        original_url = await self._url_from_cache(short_url)
+        if not original_url:
+            doc = await self._db_conn.get_collection(self._collection).find_one({"short_url": short_url})
+            if doc:
+                original_url = doc["original_url"]
+                await self._cache_url_mapping(short_url, original_url)
+                return original_url
         log_this(f"No original URL found for {short_url}")
+            
+             
+        log_this(f"Getting original URL for {short_url}")
 
     async def shorten_url(self, user_id: str | ObjectId, original_url: str, custom_alias: str | None = None):
         url_data = await self._scout_url_info(original_url)
         if custom_alias:
             short_url = custom_alias
-            collides = await self.collision_check(short_url)
+            collides = await self._collision_check(short_url)
             if collides:
                 raise ConflictException(f"Custom alias {short_url} is not available.")
             return short_url
@@ -58,7 +74,7 @@ class UrlHandler(BaseCRUD):
 
     async def _generate_short_url(self, original_url: str) -> str:
         short_url = hash_url(original_url)
-        collides = await self.collision_check(short_url)
+        collides = await self._collision_check(short_url)
         if collides:
             log_this(f"Collision detected for {short_url}. Generating new hash.")
             short_url = await self._generate_short_url(short_url)
@@ -66,7 +82,7 @@ class UrlHandler(BaseCRUD):
         else:
             return short_url
 
-    async def collision_check(self, short_url: str) -> bool:
+    async def _collision_check(self, short_url: str) -> bool:
         log_this(f"Checking for collision with {short_url}")
         return (
             await self._db_conn.get_collection(self._collection).find_one({"short_url": short_url})

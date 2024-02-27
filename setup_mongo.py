@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import sys
 
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -33,6 +34,19 @@ async def setup_mongo():
         log_this(f"Failed to create indexes. {e}")
         sys.exit(1)
 
+async def convert_all_stringtime_to_datetime_in_analytics_col():
+    try:
+        db = connect_to_mongo()
+        log_this("Converting all string time to datetime in analytics collection.")
+        async for doc in db["analytics"].find():
+            if isinstance(doc["timestamp"], datetime):
+                continue
+            new_time = datetime.strptime(doc["timestamp"], "%Y-%m-%dT%H:%M:%S.%f%z")
+            await db["analytics"].update_one({"_id": doc["_id"]}, {"$set": {"timestamp": new_time}})
+        log_this("Converted all string time to datetime in analytics collection.")
+    except Exception as e:
+        log_this(f"Failed to convert all string time to datetime in analytics collection. {e}")
+        sys.exit(1)
 
 # async def mongo_status():
 #     try:
@@ -43,5 +57,5 @@ async def setup_mongo():
 #         sys.exit(1)
 
 if __name__ == "__main__":
-    asyncio.run(setup_mongo())
+    asyncio.run(convert_all_stringtime_to_datetime_in_analytics_col())
     log_this("SETUP COMPLETE.", "DONE")

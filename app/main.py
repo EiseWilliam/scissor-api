@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.dependencies import db as db_conn
 from app.routers import all_router, url
@@ -15,14 +15,14 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(all_router, prefix="/api")
-app.include_router(url.redirect_router)
+app.include_router(url.root_router)
 
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -35,9 +35,11 @@ templates = Jinja2Templates(directory="app/templates")
 async def welcome():
     return {"message": "Welcome to Scissors API"}
 
+
 @app.get("/404/")
 async def not_found(request: Request):
     return templates.TemplateResponse("404.jinja", {"request": request})
+
 
 # test mongodb connection
 @app.get("/test")

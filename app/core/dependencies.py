@@ -9,7 +9,7 @@ from app.db.database import db as simple_db
 from app.schemas.user import ReadUser
 from app.services.url import UrlHandler
 from app.services.user import UserHandler
-from app.services.analytics import AnalyticsEngine
+from app.services.data.analytics import AnalyticsEngine
 
 def get_db() -> AsyncIOMotorDatabase:
     return simple_db

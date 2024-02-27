@@ -42,6 +42,9 @@ def gen_overview_pipeline(short_url):
                 "total_engagement": {"$sum": 1},
             }
         },
+        {
+            "$project": {"_id": 0, "clicks": 1, "scans": 1, "last_activity": 1, "total_engagement": 1},
+        },
     ]
     return pipeline
 
@@ -58,17 +61,18 @@ def gen_referrer_pipeline(short_url: str):
 
 def gen_countries_and_cities_pipeline(short_url: str):
     pipeline = [
-        {"$match": {"short_url": short_url}},
-        {"$group": {"_id": {"country": "$country", "city": "$city"}, "count": {"$sum": 1}}},
-        {"$group": {"_id": "$_id.country", "cities": {"$push": {"city": "$_id.city", "count": "$count"}}}},
-        {"$project": {"_id": 0, "country": "$_id", "cities": 1}},
-        {"$group": {"_id": None, "countries": {"$push": {"country": "$country", "cities": "$cities"}}}},
-        {"$project": {"_id": 0, "countries": 1}},
+        
+
+    {"$match": {"short_url": short_url}},
+    {"$group": {"_id": {"country": "$country", "city": "$city"}, "count": {"$sum": 1}}},
+    {"$project": {"_id": 0, "country": "$_id.country", "city": "$_id.city", "count": 1}}
+
+
     ]
     return pipeline
 
 
-def gen_timeseries_pipeline(short_url: str):
+def gen_timeline_pipeline(short_url: str):
     pipeline = [
         {"$match": {"short_url": short_url, "timestamp": {"$exists": True, "$type": "date"}}},
         {
@@ -78,6 +82,7 @@ def gen_timeseries_pipeline(short_url: str):
                     "month": {"$month": "$timestamp"},
                     "day": {"$dayOfMonth": "$timestamp"},
                     "hour": {"$hour": "$timestamp"},
+                    "minute": {"$minute": "$timestamp"},
                 },
                 "count": {"$sum": 1},
             }
@@ -85,7 +90,7 @@ def gen_timeseries_pipeline(short_url: str):
         {
             "$project": {
                 "_id": 0,
-                "date": {
+                "timestamp": {
                     "$dateFromParts": {
                         "year": "$_id.year",
                         "month": "$_id.month",
