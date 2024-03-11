@@ -47,7 +47,18 @@ async def convert_all_stringtime_to_datetime_in_analytics_col():
     except Exception as e:
         log_this(f"Failed to convert all string time to datetime in analytics collection. {e}")
         sys.exit(1)
-
+        
+        
+# write sccript to convert current country values to full country name and create new fields of counrty code
+async def reconvert_all():
+    try:
+        db = connect_to_mongo()
+        async for doc in db["analytics"].find():
+            await db["analytics"].update_one({"_id": doc["_id"]}, {"$set": {"country": "Nigeria", "country_code":"NG"}})
+        log_this("Converted all.")
+    except Exception as e:
+        log_this(f"Failed to convert all string time to datetime in analytics collection. {e}")
+        sys.exit(1)
 # async def mongo_status():
 #     try:
 #         await db.command("ping")
@@ -57,5 +68,5 @@ async def convert_all_stringtime_to_datetime_in_analytics_col():
 #         sys.exit(1)
 
 if __name__ == "__main__":
-    asyncio.run(convert_all_stringtime_to_datetime_in_analytics_col())
+    asyncio.run(reconvert_all())
     log_this("SETUP COMPLETE.", "DONE")
