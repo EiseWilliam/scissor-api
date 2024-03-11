@@ -15,6 +15,11 @@ class AppSettings(BaseSettings):
     LICENSE_NAME: str | None = config("LICENSE", default=None)
     CONTACT_NAME: str | None = config("CONTACT_NAME", default=None)
     CONTACT_EMAIL: str | None = config("CONTACT_EMAIL", default=None)
+    HOST_URL: str | None = config("HOST_URL", default="localhost:8000")
+    
+class CelerySettings(BaseSettings):
+    CELERY_BROKER_URL: str = config("CELERY_BROKER_URL", default="redis://localhost:6379/0")
+    CELERY_RESULT_BACKEND: str = config("CELERY_RESULT_BACKEND", default="redis://localhost:6379/0")
 
 class AnalyticsSettings(BaseSettings):
     AGGREGATION_INTERVAL : int = config("AGGREGATION_INTERVAL", default=60) # in minutes
@@ -51,7 +56,7 @@ class FirstUserSettings(BaseSettings):
     ADMIN_PASSWORD: str = config("ADMIN_PASSWORD", default="!Ch4ng3Th1sP4ssW0rd!")
 
 
-class Settings(AppSettings, ShortServiceSettings, MONGOSettings, RedisSettings, CryptSettings, FirstUserSettings, AnalyticsSettings):
+class Settings(AppSettings, ShortServiceSettings, MONGOSettings, RedisSettings,CelerySettings,CryptSettings, FirstUserSettings, AnalyticsSettings):
     pass
 
 

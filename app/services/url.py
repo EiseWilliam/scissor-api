@@ -5,21 +5,29 @@ from linkpreview import link_preview
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from redis.asyncio import Redis
 
-from app.core.exceptions import ConflictException, NotFoundException
+from app.db.database import db
+from app.core.exceptions import ConflictException, NotFoundException, ForbiddenException
 from app.core.logging import log_this
 from app.core.utils.url import hash_url
-from app.schemas.url import ListUrl, UrlAnalyticsResponse
+from app.schemas.url import ListUrl, Url, UrlAnalyticsResponse
 from app.services.base_crud import BaseCRUD
+import random
+import string
+
+from app.services.tasks import populate_preview
 
 
 class UrlHandler(BaseCRUD):
     def __init__(self, db_conn: AsyncIOMotorDatabase):  # type: ignore
         super().__init__(db_conn, "urls")
-        self.redis = Redis()
+        self.redis = Redis(decode_responses=True)
 
-
-    async def get_url_quickinfo(self, short_url: str) -> dict[str, Any]:
-        pass
+        
+    async def get_url_details(self, short_url: str) -> Url | None:
+        result = await self.get(short_url = short_url)
+        if result:
+            return Url(**result)
+    
     async def get_url_stats(self, short_url: str) -> UrlAnalyticsResponse:
         result = await self._db_conn.get_collection("analytics").find({"short_url": short_url}).to_list(None)
         if result:
@@ -34,7 +42,10 @@ class UrlHandler(BaseCRUD):
         return ListUrl(
             urls = await self._db_conn.get_collection(self._collection).find({"user_id": user_id}).to_list(None)
         )
-
+    async def get_user_recent_urls(self, user_id: str | ObjectId, limit: int = 5):
+        return ListUrl(
+            urls = await self._db_conn.get_collection(self._collection).find({"user_id": user_id}).sort([("created_at", -1)]).to_list(limit)
+        ).model_dump()
     async def _cache_url_mapping(self, short_url: str, original_url: str) -> None:
         await self.redis.set(short_url, original_url)
         
@@ -43,29 +54,56 @@ class UrlHandler(BaseCRUD):
 
     async def get_original_url(self, short_url: str):
         original_url = await self._url_from_cache(short_url)
-        if not original_url:
+        if original_url is None:
+            log_this(f"Cache miss for {short_url}. Fetching from DB.")
             doc = await self._db_conn.get_collection(self._collection).find_one({"short_url": short_url})
             if doc:
                 original_url = doc["original_url"]
                 await self._cache_url_mapping(short_url, original_url)
                 return original_url
-        log_this(f"No original URL found for {short_url}")
-            
-             
-        log_this(f"Getting original URL for {short_url}")
-
-    async def shorten_url(self, user_id: str | ObjectId, original_url: str, custom_alias: str | None = None):
-        url_data = await self._scout_url_info(original_url)
+            else:
+                raise NotFoundException(f"No URL found for {short_url}")
+        return original_url
+        
+    async def _is_owner(self, short_url:str, user_id: str) -> bool:
+        res = await self._db_conn.get_collection(self._collection).find_one({"short_url": short_url, "user_id": user_id})
+        if res:
+            return True
+        return False
+        
+    async def update_url(self, short_url: str,user_id:str | ObjectId, **kwargs):
+        if self._is_owner(short_url, str(user_id)):
+            res = await self._db_conn.get_collection(self._collection).update_one({"short_url": short_url}, {"$set": kwargs})
+            if res.acknownledged:
+                return True
+        raise ForbiddenException("You are not the owner of this URL")
+    
+    async def delete_url(self,short_url: str,user_id:str | ObjectId, **kwargs):
+        if self._is_owner(short_url, str(user_id)):
+            res = await self._db_conn.get_collection(self._collection).delete_one({"short_url": short_url})
+            if res.acknownledged:
+                return True
+        raise ForbiddenException("You are not the owner of this URL")
+   
+    async def custom_alias_is_available(self, alias: str) -> bool:
+       return not await self._collision_check(alias)
+    
+    async def shorten_url(self, user_id: str | ObjectId, original_url: str, custom_alias: str | None = None, **kwargs):
         if custom_alias:
             short_url = custom_alias
             collides = await self._collision_check(short_url)
             if collides:
                 raise ConflictException(f"Custom alias {short_url} is not available.")
-            return short_url
-        short_url = await self._generate_short_url(original_url)
-        await self.create(
-            {"user_id": user_id, "original_url": original_url, "short_url": short_url, **url_data}
+            await self.create(
+            {"user_id": user_id, "original_url": original_url, "short_url": short_url, **kwargs}
         )
+            task = populate_preview.delay(short_url, original_url)
+        else:
+            short_url = await self._generate_short_url(original_url)
+            await self.create(
+                {"user_id": user_id, "original_url": original_url, "short_url": short_url, **kwargs}
+            )
+            task = populate_preview.delay(short_url, original_url)
         return short_url
 
     async def _scout_url_info(self, original_url: str) -> dict[str, Any]:
@@ -73,11 +111,12 @@ class UrlHandler(BaseCRUD):
         return {"title": preview.title, "description": preview.description, "thumbnail": preview.image}
 
     async def _generate_short_url(self, original_url: str) -> str:
-        short_url = hash_url(original_url)
+        salt = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
+        short_url = hash_url(original_url + salt)
         collides = await self._collision_check(short_url)
         if collides:
             log_this(f"Collision detected for {short_url}. Generating new hash.")
-            short_url = await self._generate_short_url(short_url)
+            short_url = await self._generate_short_url(original_url)
             return short_url
         else:
             return short_url
@@ -91,3 +130,4 @@ class UrlHandler(BaseCRUD):
 
 
 _ANALYTICS_AGGREGATE = [{"$group": {"_id": "$short_url", "count": {"$sum": 1}}}]
+url_handler = UrlHandler(db)

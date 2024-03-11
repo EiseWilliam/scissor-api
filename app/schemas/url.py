@@ -1,28 +1,32 @@
-from pydantic import BaseModel, Field
-
-from app.schemas.base import Base
+from pydantic import BaseModel, Field, HttpUrl
 
 from app.schemas.base import Base
 
 
 class ShortenUrl(BaseModel):
-    url: str = Field(..., title="URL to shorten", description="The URL to shorten")
+    url: HttpUrl = Field(..., title="URL to shorten", description="The URL to shorten")
     custom_alias: str | None = Field(
         None, title="Custom alias", description="The custom alias for the shortened URL"
     )
 
-
-class Url(Base):
-    original_url: str = Field(..., title="Original URL", description="The original URL")
+class UpdateUrl(BaseModel):
+    original_url: HttpUrl = Field(..., title="Original URL", description="The original URL")
     short_url: str = Field(..., title="Short URL", description="The short URL")
+    title: str | None = Field(None, title="Title", description="The title of the URL")
+    
+class Url(Base):
+    original_url: HttpUrl = Field(..., title="Original URL", description="The original URL")
+    short_url: str = Field(..., title="Short URL", description="The short URL")
+    has_qr: bool = False
     title: str | None = Field(None, title="Title", description="The title of the URL")
     description: str | None = Field(None, title="Description", description="The description of the URL")
     thumbnail: str | None = Field(None, title="Thumbnail", description="The thumbnail of the URL")
-    user_id: str | None = Field(None, title="User ID", description="The user ID")
+    # user_id: str | None = Field(None, title="User ID", description="The user ID")
     # created_at: str | datetime = Field(None, title="Created At", description="The time the URL was created", examples=["2021-08-01T12:00:00Z"])
     # updated_at: str | datetime = Field(None, title="Updated At", description="The time the URL was last updated", examples=["2021-08-01T12:00:00Z"])
 
-
+class UrlClicks(BaseModel):
+    short_urls: list[str]
 class ListUrl(BaseModel):
     urls: list[Url]
 
