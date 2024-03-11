@@ -60,12 +60,12 @@ def gen_referrer_pipeline(short_url: str):
 
 
 def gen_countries_and_cities_pipeline(short_url: str):
-    pipeline = [
+    pipeline =[
         
 
     {"$match": {"short_url": short_url}},
-    {"$group": {"_id": {"country": "$country", "city": "$city"}, "count": {"$sum": 1}}},
-    {"$project": {"_id": 0, "country": "$_id.country", "city": "$_id.city", "count": 1}}
+    {"$group": {"_id": {"country": "$country", "city": "$city", "country_code":"$country_code"}, "count": {"$sum": 1}}},
+    {"$project": {"_id": 0, "country": "$_id.country", "country_code": "$_id.country_code","city": "$_id.city", "count": 1}}
 
 
     ]

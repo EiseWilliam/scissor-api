@@ -1,9 +1,11 @@
 from datetime import UTC, datetime
-from typing import Any, Literal
+from typing import Literal
+
+
 import pandas as pd
 
 
-def process_timeline(data: list, interval: Literal["h","d"] = "d") -> dict:
+def process_timeline(data: list, interval: Literal["h","d"] = "h") -> dict:
     data.append({'timestamp': datetime.now(UTC).isoformat(), 'count': 0})
     df = pd.DataFrame(data)
     
@@ -34,14 +36,17 @@ def process_timeline(data: list, interval: Literal["h","d"] = "d") -> dict:
 
 def process_location(data_list: list) -> tuple:
     countries = {}
+    country_codes = {}
     cities = {}
     for data in data_list:
         country_name = data["country"]
+        country_code = data["country_code"]
         city_name = data["city"]
         count = data["count"]
 
         # Update the counts for the country and city
         countries[country_name] = countries.get(country_name, 0) + count
         cities[city_name] = cities.get(city_name, 0) + count
+        country_codes[country_code] = country_codes.get(country_name, 0) + count
 
-    return countries, cities
+    return country_codes, countries, cities
