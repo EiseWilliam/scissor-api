@@ -1,5 +1,5 @@
-from motor.motor_asyncio import AsyncIOMotorClient
-
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from typing import Any, Type
 from app.core.config.settings import settings
 
 URI = settings.MONGO_URI
@@ -22,7 +22,7 @@ DB = settings.MONGO_DB
 #         yield db
 #         print("Mongo connection closed.")
 
-db = AsyncIOMotorClient(URI).DB
+db = AsyncIOMotorClient(URI)[DB]
 
 # create analytics collection
 

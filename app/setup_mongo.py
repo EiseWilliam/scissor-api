@@ -68,5 +68,5 @@ async def reconvert_all():
 #         sys.exit(1)
 
 if __name__ == "__main__":
-    asyncio.run(reconvert_all())
+    asyncio.run(setup_mongo())
     log_this("SETUP COMPLETE.", "DONE")
