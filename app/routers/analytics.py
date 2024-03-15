@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from fastapi.responses import ORJSONResponse
-
+from app.routers.limiter import limiter
 from app.core.dependencies import AnalyticEngine
 
 router = APIRouter(default_response_class=ORJSONResponse, tags=["analytics"])

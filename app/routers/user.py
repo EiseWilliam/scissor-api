@@ -5,6 +5,8 @@ from fastapi.responses import ORJSONResponse
 from app.core.dependencies import CurrentUser, user_handler
 from app.core.responses import BaseResponse, ProfileResponse, direct_response
 from app.schemas.user import UpdateUser
+from app.routers.limiter import limiter
+
 
 router = APIRouter(
     default_response_class=ORJSONResponse,

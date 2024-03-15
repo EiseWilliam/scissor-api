@@ -16,10 +16,11 @@ class AppSettings(BaseSettings):
     CONTACT_NAME: str | None = config("CONTACT_NAME", default=None)
     CONTACT_EMAIL: str | None = config("CONTACT_EMAIL", default=None)
     HOST_URL: str | None = config("HOST_URL", default="localhost:8000")
+    DEBUG: bool = config("DEBUG", default=True)
     
 class CelerySettings(BaseSettings):
-    CELERY_BROKER_URL: str = config("CELERY_BROKER_URL", default="redis://localhost:6379/0")
-    CELERY_RESULT_BACKEND: str = config("CELERY_RESULT_BACKEND", default="redis://localhost:6379/0")
+    CELERY_BROKER_URL: str = config("CELERY_BROKER_URL", default="redis://redis:6379/0")
+    CELERY_RESULT_BACKEND: str = config("CELERY_RESULT_BACKEND", default="redis://redis:6379/0")
 
 class AnalyticsSettings(BaseSettings):
     AGGREGATION_INTERVAL : int = config("AGGREGATION_INTERVAL", default=60) # in minutes
@@ -37,13 +38,13 @@ class CryptSettings(BaseSettings):
 
 
 class RedisSettings(BaseSettings):
-    REDIS_URL: str = config("REDIS_URL", default="redis://localhost:6379/0")
+    REDIS_URL: str = config("REDIS_URL", default="redis://redis:6379/0")
     REDIS_USER: str | None = config("REDIS_USER", default=None)
     REDIS_PASS: str | None = config("REDIS_PASS", default=None)
 
 
 class MONGOSettings(BaseSettings):
-    MONGO_URI: str = config("MONGO_URI", default="mongodb://localhost:27017/")
+    MONGO_URI: str = config("MONGO_URI", default="mongodb://mongo:27017/")
     MONGO_DB: str = config("MONGO_DB", default="DB")
     MONGO_USER: str | None = config("MONGO_USER", default=None)
     MONGO_PASS: str | None = config("MONGO_PASS", default=None)

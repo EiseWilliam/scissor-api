@@ -1,10 +1,6 @@
 from datetime import UTC, datetime
-from typing import Annotated, Any, List
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
-from fastapi.responses import ORJSONResponse, RedirectResponse
-from fastapi.routing import APIRoute
-from pydantic import HttpUrl
+from fastapi.templating import Jinja2Templates
 
 from app.core.dependencies import AnalyticEngine, CurrentUser, UrlHandler
 from app.core.logging import log_this
@@ -14,12 +10,17 @@ from app.schemas.qr import QROptions
 from app.schemas.url import ShortenUrl, UpdateUrl, UrlClicks
 from app.services.qr import build_qr_code
 from app.services.tasks import track_activity
+from fastapi import APIRouter, Request, status
+from fastapi.responses import ORJSONResponse, RedirectResponse
+from fastapi.routing import APIRoute
+from pydantic import HttpUrl
 
 router = APIRouter(default_response_class=ORJSONResponse, tags=["url"])
-qrrouter = APIRouter(default_response_class=ORJSONResponse, tags=["QR"])
+qr_router = APIRouter(default_response_class=ORJSONResponse, tags=["QR"])
+templates = Jinja2Templates(directory="app/templates")
 
 
-@qrrouter.post("/qr_code")
+@qr_router.post("/qr_code")
 async def generate_qr_code(
     url: str,
     options: QROptions,
@@ -58,7 +59,7 @@ async def check_custom_alias_availability(
     return await handler.custom_alias_is_available(alias)
 
 
-@qrrouter.post("/quick_qr")
+@qr_router.post("/quick_qr")
 async def create_qr_code(
     url: str,
     options: QROptions,
@@ -75,7 +76,9 @@ async def create_qr_code(
 
 
 @router.post("/shorten", summary="Create a new short link.")
-async def create_new_short_link(data: ShortenUrl, user: CurrentUser, handler: UrlHandler, request: Request):
+async def create_new_short_link(
+    data: ShortenUrl, user: CurrentUser, handler: UrlHandler, request: Request
+):
     url = str(data.url)
     short_link = await handler.shorten_url(user.id, url, data.custom_alias)
     host_url = request.base_url
@@ -87,7 +90,9 @@ async def create_new_short_link(data: ShortenUrl, user: CurrentUser, handler: Ur
 
 
 @router.post("/quick_shorten")
-async def annonymous_create_short_link(url: HttpUrl, handler: UrlHandler, request: Request):
+async def annonymous_create_short_link(
+    url: HttpUrl, handler: UrlHandler, request: Request
+):
     url_str = str(url)
     short_link = await handler.shorten_url("annonymous", url_str)
     host_url = request.base_url
@@ -105,10 +110,13 @@ async def get_user_urls(user: CurrentUser, handler: UrlHandler):
 
 
 @router.patch("/my_urls/{short_url}")
-async def update_url(short_url, updates: UpdateUrl, user: CurrentUser, handler: UrlHandler):
+async def update_url(
+    short_url, updates: UpdateUrl, user: CurrentUser, handler: UrlHandler
+):
     if await handler.update_url(short_url, user.id, **updates.model_dump()):
         return ORJSONResponse(None, status_code=status.HTTP_204_NO_CONTENT)
-    
+
+
 @router.delete("/my_urls/{short_url}")
 async def delete_url(short_url, user: CurrentUser, handler: UrlHandler):
     if await handler.delete_url(short_url, user.id):
@@ -123,14 +131,21 @@ async def get_url_clicks(short_link: UrlClicks, handler: AnalyticEngine):
     res = await handler.get_url_clicks(short_link.short_urls)
     return res
     # return direct_response(res)
+
+
 @router.get(
     "/stats",
 )  # response_model=UrlAnalyticsResponse)
-async def get_url_clicks_for_user(user: CurrentUser, analytic: AnalyticEngine, handler: UrlHandler):
+async def get_url_clicks_for_user(
+    user: CurrentUser, analytic: AnalyticEngine, handler: UrlHandler
+):
     # res = await handler.get_url_analytics(short_link)
     res = await handler.get_user_recent_urls(user.id)
-    data = await analytic.get_url_clicks([urldata["short_url"] for urldata in res["urls"]])
+    data = await analytic.get_url_clicks(
+        [urldata["short_url"] for urldata in res["urls"]]
+    )
     return data
+
 
 root_router = APIRouter(default_response_class=ORJSONResponse, tags=["link"])
 
@@ -143,22 +158,24 @@ async def show_url_info(short_link: str, handler: UrlHandler, analytic: Analytic
 
 @root_router.get("/{short_link}")
 async def forward_to_target_url(
-    short_link: str,
-    request: Request,
-    handler: UrlHandler,
-    ref: str | None = None
+    short_link: str, request: Request, handler: UrlHandler, ref: str | None = None
 ):
     true_url = await handler.get_original_url(short_link)
-    if true_url:
-        referrer, user_agent, ip_address = extract_from_request(request)
-        # background_tasks.add_task(
-        #     analytics.track_click, short_link, true_url, user_agent, ip_address, referrer, datetime.now(UTC)
-        # )
-        track_activity.delay(short_link, ref, true_url, user_agent, ip_address, referrer, datetime.now(UTC))
-        return RedirectResponse(true_url)
-    else:
-        log_this(f"URL not found for {short_link}")
-        return RedirectResponse("/404/")
+ 
+    referrer, user_agent, ip_address = extract_from_request(request)
+    # background_tasks.add_task(
+    #     analytics.track_click, short_link, true_url, user_agent, ip_address, referrer, datetime.now(UTC)
+    # )
+    track_activity.delay(
+        short_link,
+        ref,
+        true_url,
+        user_agent,
+        ip_address,
+        referrer,
+        datetime.now(UTC),
+    )
+    return RedirectResponse(true_url)
 
 
 redirect_route = APIRoute(

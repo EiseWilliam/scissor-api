@@ -8,6 +8,9 @@ from app.core.dependencies import user_handler
 from app.core.exceptions import UnauthorizedException
 from app.core.responses import DResponse, LoginTokenResponse
 from app.schemas.user import CreateUser, CreateUserRequest
+from app.routers.limiter import limiter
+
+
 
 router = APIRouter(default_response_class=DResponse, tags=["auth"])
 

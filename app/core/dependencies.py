@@ -2,7 +2,6 @@ from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
-
 from app.core.backend import auth as security
 from app.core.backend.auth import cookie_scheme, oauth2_scheme
 from app.db.database import db as simple_db
@@ -12,7 +11,7 @@ from app.services.url import UrlHandler as Url
 from app.services.user import UserHandler
 
 
-def get_db() -> AsyncIOMotorDatabase:
+def get_db():
     return simple_db
 
 
@@ -93,3 +92,7 @@ async def get_superuser(
     if not current_user["is_superuser"]:
         raise HTTPException(status_code=403, detail="NOT_SUPERUSER")
     return current_user
+
+# def get_user_for_limiter(
+# ):
+    

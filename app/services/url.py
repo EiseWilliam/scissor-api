@@ -6,7 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from redis.asyncio import Redis
 
 from app.db.database import db
-from app.core.exceptions import ConflictException, NotFoundException, ForbiddenException
+from app.core.exceptions import ConflictException, NotFoundException, ForbiddenException, URLNotFoundException
 from app.core.logging import log_this
 from app.core.utils.url import hash_url
 from app.schemas.url import ListUrl, Url, UrlAnalyticsResponse
@@ -62,7 +62,7 @@ class UrlHandler(BaseCRUD):
                 await self._cache_url_mapping(short_url, original_url)
                 return original_url
             else:
-                raise NotFoundException(f"No URL found for {short_url}")
+                raise URLNotFoundException
         return original_url
         
     async def _is_owner(self, short_url:str, user_id: str) -> bool:
