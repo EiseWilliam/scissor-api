@@ -95,6 +95,6 @@ async def verify_token(token: str) -> Any | None:
             if expired:
                 return None
             else:
-                if redis.exists(f"blacklist:{token}"):
+                if await redis.exists(f"blacklist:{token}"):
                     return None
                 return {"id": payload["sub"], "email": payload["email"]}

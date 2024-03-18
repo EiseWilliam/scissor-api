@@ -58,18 +58,18 @@ class UserHandler(BaseCRUD[CreateUser, ReadUser, UpdateUser]):
         user = await self.private_get_by_email(email)
         if not user:
             return None
-        if not await security.verify_password(password, user.password):
+        if not security.verify_password(password, user.password):
             return None
 
         return user
 
     async def generate_login_tokens(self, user: ReadUser) -> dict[str, str]:
         access_token_expires = timedelta(security.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = await security.create_access_token(
+        access_token = security.create_access_token(
             data={"sub": str(user.id), "email": user.email}, expires_delta=access_token_expires
         )
         refresh_token_expires = timedelta(security.REFRESH_TOKEN_EXPIRE_DAYS)
-        refresh_token = await security.create_refresh_token(
+        refresh_token = security.create_refresh_token(
             data={"sub": str(user.id), "email": user.email}, expires_delta=refresh_token_expires
         )
         return {"access_token": access_token, "refresh_token": refresh_token}

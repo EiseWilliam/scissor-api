@@ -6,6 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config.settings import settings
 
 
-REDIS_URI = settings.REDIS_URL
+REDIS_URI = settings.REDIS_URI
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["3 per minute"], storage_uri=REDIS_URI)

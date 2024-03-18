@@ -11,7 +11,6 @@ from motor.metaprogramming import create_class_with_framework
 from typing import Type
 from motor.frameworks import asyncio as asyncio_framework
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection, AsyncIOMotorDatabase
-from 
 
 # async def main():
 #     client = await connect_to_mongo()
@@ -29,13 +28,3 @@ from
 
 #     client.close()  # Close the connection
 
-
-if __name__ == "__main__":
-    print(type(AsyncIOMotorDatabase))
-    print(Type[type(AsyncIOMotorCollection)])
-    print(type(AsyncIOMotorClient))
-
-ClientType = type[AgnosticClient[_DocumentType @ AgnosticClient]]
-client: AgnosticClient = AsyncIOMotorClient(URI)
-
-db = client["DB"]
