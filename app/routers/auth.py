@@ -8,7 +8,7 @@ from app.core.backend.auth import blacklist_access_token, blacklist_refresh_toke
 from app.core.dependencies import JWTScheme, user_handler
 from app.core.exceptions import UnauthorizedException
 from app.core.responses import BaseResponse, DResponse, LoginTokenResponse, LogoutResponse
-from app.schemas.user import CreateUser, CreateUserRequest
+from app.schemas.user import CreateUser, CreateUserRequest, RefreshSession
 from app.routers.limiter import limiter
 
 
@@ -35,7 +35,7 @@ async def login_user(data: Annotated[OAuth2PasswordRequestForm, Depends()], hand
     return LoginTokenResponse(**tokens, message="login successful, tokens generated")
 
 @router.post("/refresh_login")
-async def refresh_login_session(handler: user_handler):
+async def refresh_login_session(rrefresh_token:RefreshSession,handler: user_handler):
     """
     Refreshes the login session for the user.
 

@@ -41,6 +41,7 @@ class CryptSettings(BaseSettings):
 class RedisSettings(BaseSettings):
     REDIS_URI: str = config("REDIS_URI", default="redis://redis:6379/0")
     REDIS_URL: str = config("REDIS_URL", default="redis://redis:6379/0")
+    REDIS_HOST: str = config("REDIS_HOST", default="redis")
     REDIS_USER: str | None = config("REDIS_USER", default=None)
     REDIS_PASS: str | None = config("REDIS_PASS", default=None)
 

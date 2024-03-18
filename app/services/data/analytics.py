@@ -2,8 +2,6 @@ from datetime import UTC, datetime
 from typing import Literal
 
 import orjson
-import requests
-from fastapi import Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from redis.asyncio import Redis
 from user_agents import parse
@@ -22,12 +20,13 @@ from app.services.data.pipelines import (
 from app.services.data.refine import process_location, process_timeline
 
 AGGREGATION_INTERVAL = settings.AGGREGATION_INTERVAL
-REDIS_URL = settings.REDIS_URL
+REDIS_HOST = settings.REDIS_HOST
+
 
 class AnalyticsEngine:
     def __init__(self, db_conn: AsyncIOMotorDatabase):
         self._db_conn = db_conn
-        self.redis: Redis = Redis(host=REDIS_URL, decode_responses=True)
+        self.redis: Redis = Redis(host=REDIS_HOST, decode_responses=True)
 
     async def _get_overview_stats(self, short_url: str, start_from: datetime | str | None = None):
         return (
@@ -104,7 +103,7 @@ class AnalyticsEngine:
     async def get_url_clicks(self, short_url: list[str]):
         tasks = [await self.redis.hget(f"analytics:{short}", "clicks") for short in short_url]  # type: ignore
         return {k: int(v) if v is not None else 0 for k, v in zip(short_url, tasks)}
-    
+
     async def get_aggr_from_redis(self, short_url: str):
         result = await self.redis.hgetall(f"analytics:{short_url}")  # type: ignore
         analytics_data = {
@@ -198,7 +197,7 @@ class AnalyticsEngine:
         # response = requests.get(f"http://ip-api.com/json/{ip_address}")
         # data = response.json()
         data = response
-        location_data =  data["location"]
+        location_data = data["location"]
         company_data = data["company"]
         location = {
             # "ip": data["ip"],
