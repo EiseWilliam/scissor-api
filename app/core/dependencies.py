@@ -2,6 +2,8 @@ from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
+
+
 from app.core.backend import auth as security
 from app.core.backend.auth import cookie_scheme, oauth2_scheme
 from app.db.database import db as simple_db
@@ -46,7 +48,7 @@ async def get_jwt(token: str = Depends(oauth2_scheme), token2: str = Depends(coo
         return token2
 
 
-jwt_scheme = Annotated[str, Depends(get_jwt)]
+JWTScheme = Annotated[str, Depends(get_jwt)]
 
 # async def get_current_user(
 #     token: str = Depends(get_jwt),
@@ -61,7 +63,7 @@ jwt_scheme = Annotated[str, Depends(get_jwt)]
 #     return user
 
 
-async def get_current_user(token: jwt_scheme, handler: user_handler) -> ReadUser:
+async def get_current_user(token: JWTScheme, handler: user_handler) -> ReadUser:
     print(f"token: {token}")
     if token:
         payload = await security.verify_token(token)

@@ -5,6 +5,7 @@ from linkpreview import link_preview
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from redis.asyncio import Redis
 
+from app.core.config.settings import settings
 from app.db.database import db
 from app.core.exceptions import ConflictException, NotFoundException, ForbiddenException, URLNotFoundException
 from app.core.logging import log_this
@@ -15,12 +16,12 @@ import random
 import string
 
 from app.services.tasks import populate_preview
-
+REDIS_URL = settings.REDIS_URL
 
 class UrlHandler(BaseCRUD):
     def __init__(self, db_conn: AsyncIOMotorDatabase):  # type: ignore
         super().__init__(db_conn, "urls")
-        self.redis = Redis(decode_responses=True)
+        self.redis = Redis(host=REDIS_URL, decode_responses=True)
 
         
     async def get_url_details(self, short_url: str) -> Url | None:
@@ -74,14 +75,14 @@ class UrlHandler(BaseCRUD):
     async def update_url(self, short_url: str,user_id:str | ObjectId, **kwargs):
         if self._is_owner(short_url, str(user_id)):
             res = await self._db_conn.get_collection(self._collection).update_one({"short_url": short_url}, {"$set": kwargs})
-            if res.acknownledged:
+            if res.acknowledged:
                 return True
         raise ForbiddenException("You are not the owner of this URL")
     
     async def delete_url(self,short_url: str,user_id:str | ObjectId, **kwargs):
         if self._is_owner(short_url, str(user_id)):
             res = await self._db_conn.get_collection(self._collection).delete_one({"short_url": short_url})
-            if res.acknownledged:
+            if res.acknowledged:
                 return True
         raise ForbiddenException("You are not the owner of this URL")
    
@@ -128,6 +129,4 @@ class UrlHandler(BaseCRUD):
             is not None
         )
 
-
-_ANALYTICS_AGGREGATE = [{"$group": {"_id": "$short_url", "count": {"$sum": 1}}}]
 url_handler = UrlHandler(db)

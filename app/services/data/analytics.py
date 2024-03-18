@@ -22,12 +22,12 @@ from app.services.data.pipelines import (
 from app.services.data.refine import process_location, process_timeline
 
 AGGREGATION_INTERVAL = settings.AGGREGATION_INTERVAL
-
+REDIS_URL = settings.REDIS_URL
 
 class AnalyticsEngine:
     def __init__(self, db_conn: AsyncIOMotorDatabase):
         self._db_conn = db_conn
-        self.redis: Redis = Redis(decode_responses=True)
+        self.redis: Redis = Redis(host=REDIS_URL, decode_responses=True)
 
     async def _get_overview_stats(self, short_url: str, start_from: datetime | str | None = None):
         return (

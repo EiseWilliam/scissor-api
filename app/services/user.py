@@ -5,8 +5,10 @@ from bson import ObjectId
 from fastapi import HTTPException, Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import EmailStr
+from redis import Redis
 
 from app.core.backend import auth as security
+from app.core.config.settings import settings
 from app.schemas.user import CreateUser, ReadUser, UpdateUser, _ReadUser
 from app.services.base_crud import BaseCRUD
 
@@ -14,6 +16,7 @@ from app.services.base_crud import BaseCRUD
 class UserHandler(BaseCRUD[CreateUser, ReadUser, UpdateUser]):
     def __init__(self, db_conn: AsyncIOMotorDatabase):
         super().__init__(db_conn, "users")
+
 
     async def email_exists(self, email: EmailStr) -> bool:
         item = await self._db_conn.get_collection(self._collection).find_one({"email": email})

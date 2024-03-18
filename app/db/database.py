@@ -4,6 +4,7 @@ from app.core.config.settings import settings
 
 URI = settings.MONGO_URI
 DB = settings.MONGO_DB
+
 # class MongoManager:
 #     def __init__(self, uri: str = URI):
 #         self.db = AsyncIOMotorClient(URI)
@@ -25,4 +26,6 @@ DB = settings.MONGO_DB
 db = AsyncIOMotorClient(URI)[DB]
 
 # create analytics collection
+
+
 

@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from urllib import request
 
 from fastapi.templating import Jinja2Templates
 
@@ -6,6 +7,7 @@ from app.core.dependencies import AnalyticEngine, CurrentUser, UrlHandler
 from app.core.logging import log_this
 from app.core.responses import direct_response
 from app.core.utils.analytics import extract_from_request
+from app.routers.limiter import limiter
 from app.schemas.qr import QROptions
 from app.schemas.url import ShortenUrl, UpdateUrl, UrlClicks
 from app.services.qr import build_qr_code
@@ -21,6 +23,7 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 @qr_router.post("/qr_code")
+@limiter.limit("5/minute")
 async def generate_qr_code(
     url: str,
     options: QROptions,
@@ -52,14 +55,18 @@ async def generate_qr_code(
 
 
 @router.get("/verify_custom")
+@limiter.limit("20/minute")
 async def check_custom_alias_availability(
     alias: str,
     handler: UrlHandler,
+    user: CurrentUser,
+    request: Request
 ):
     return await handler.custom_alias_is_available(alias)
 
 
 @qr_router.post("/quick_qr")
+@limiter.limit("5/minute")
 async def create_qr_code(
     url: str,
     options: QROptions,
@@ -76,6 +83,7 @@ async def create_qr_code(
 
 
 @router.post("/shorten", summary="Create a new short link.")
+@limiter.limit("5/minute")
 async def create_new_short_link(
     data: ShortenUrl, user: CurrentUser, handler: UrlHandler, request: Request
 ):
@@ -83,10 +91,8 @@ async def create_new_short_link(
     short_link = await handler.shorten_url(user.id, url, data.custom_alias)
     host_url = request.base_url
     if str(host_url).startswith("http://"):
-        full_url = f"{host_url}{short_link}".removeprefix("http://")
-        return full_url
-    full_url = f"{host_url}{short_link}".removeprefix("https://")
-    return full_url
+        return f"{host_url}{short_link}".removeprefix("http://")
+    return f"{host_url}{short_link}".removeprefix("https://")
 
 
 @router.post("/quick_shorten")
@@ -104,10 +110,16 @@ async def annonymous_create_short_link(
 
 
 @router.get("/my_urls")
-async def get_user_urls(user: CurrentUser, handler: UrlHandler):
+async def get_user_urls(user: CurrentUser, handler: UrlHandler, request: Request):
     urls = await handler.get_user_urls(user.id)
     return direct_response(urls)
 
+
+
+@router.get("/my_urls/{short_url}")
+async def get_url(short_url, user: CurrentUser, handler: UrlHandler):
+    url_info = await handler.get_url_details(short_url)
+    return url_info
 
 @router.patch("/my_urls/{short_url}")
 async def update_url(
