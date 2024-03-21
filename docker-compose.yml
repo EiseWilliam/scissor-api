@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    ports:
+      - "9000:8000" 
+    depends_on: 
+      - redis
+      - mongo
+  redis:
+    image: redis:latest
+  mongo:
+    image: mongo:latest
+

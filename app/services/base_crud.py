@@ -37,6 +37,10 @@ class BaseCRUD(Generic[CreateSchema, ReadSchema, UpdateSchema]):
     async def on_delete(self) -> None:
         pass
 
+    async def get(self, **filters) -> ReadSchema:
+        item = await self._db_conn.get_collection(self._collection).find_one(filters)
+        return item
+    
     async def id_exists(self, id: str) -> bool:
         item = await self._db_conn.get_collection(self._collection).find_one({"_id": ObjectId(id)})
         return item is not None

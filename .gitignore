@@ -7,9 +7,15 @@ venv/
 /ref3
 /ref4
 
-
-# ignore all pycahe files
-__pycache__/
+app/__pycache__
 .mypy_cache/
 .pytest_cache/
+node_modules/
+bun.lockb
+tailwind.config.js
+package.json
 *.pyc
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/

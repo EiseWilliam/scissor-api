@@ -1,5 +1,6 @@
 from typing import Annotated
 
+from fastapi import Form
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 from pydantic_core.core_schema import FieldValidationInfo
 
@@ -37,7 +38,8 @@ class CreateUserRequest(BaseModel):
                 "including lowercase, uppercase, digit, and special character".format(min_length)
             )
         return v
-    
+class RefreshSession(BaseModel):
+    refresh_token: Annotated[str, Form()]
 class ChangePassword(BaseModel):
     old_password: str
     new_password: str

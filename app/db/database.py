@@ -1,17 +1,19 @@
-from typing import Any
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from typing import Any, Type
+from app.core.config.settings import settings
 
-URI = "mongodb://localhost:27017"
+URI = settings.MONGO_URI
+DB = settings.MONGO_DB
 
 # class MongoManager:
 #     def __init__(self, uri: str = URI):
 #         self.db = AsyncIOMotorClient(URI)
-        
+
 
 #     def __enter__(self) -> AsyncIOMotorDatabase:
 #         return self.db["price_tracker"]
-        
-        
+
+
 #     def __exit__(self, exc_type, exc_value, traceback):
 #         self.db.close()
 
@@ -21,4 +23,9 @@ URI = "mongodb://localhost:27017"
 #         yield db
 #         print("Mongo connection closed.")
 
-db = AsyncIOMotorClient(URI)["libtest"]
+db = AsyncIOMotorClient(URI)[DB]
+
+# create analytics collection
+
+
+

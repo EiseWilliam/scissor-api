@@ -4,10 +4,14 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
 # from app.services.user import user_handler
-from app.core.dependencies import user_handler
+from app.core.backend.auth import blacklist_access_token, blacklist_refresh_token
+from app.core.dependencies import JWTScheme, user_handler
 from app.core.exceptions import UnauthorizedException
-from app.core.responses import DResponse, LoginTokenResponse
-from app.schemas.user import CreateUser, CreateUserRequest
+from app.core.responses import BaseResponse, DResponse, LoginTokenResponse, LogoutResponse
+from app.schemas.user import CreateUser, CreateUserRequest, RefreshSession
+from app.routers.limiter import limiter
+
+
 
 router = APIRouter(default_response_class=DResponse, tags=["auth"])
 
@@ -19,7 +23,7 @@ async def register_user(data: CreateUserRequest, handler: user_handler):
         password=data.password,
     )
     new_user_id = await handler.register_user(user)
-    return DResponse(content={"message": "user registered successfully", "user_id": new_user_id})
+    return DResponse(content={"message": "user registered successfully", "user_id": new_user_id},status_code=201)
 
 
 @router.post("/login", response_model=LoginTokenResponse)
@@ -31,14 +35,29 @@ async def login_user(data: Annotated[OAuth2PasswordRequestForm, Depends()], hand
     return LoginTokenResponse(**tokens, message="login successful, tokens generated")
 
 @router.post("/refresh_login")
-async def refresh_login_session(data: Annotated[OAuth2PasswordRequestForm, Depends()], handler: user_handler):
+async def refresh_login_session(rrefresh_token:RefreshSession,handler: user_handler):
+    """
+    Refreshes the login session for the user.
+
+    (Not implemented)
+
+    Returns:
+    None
+
+    Raises:
+    None
+    """
+    # Not yet implemented, document that way
+
     pass
     
 
-
 @router.get("/logout")
-async def logout_user(handler: user_handler):
-    pass
+async def logout_user(access_token: JWTScheme, refresh_token: str) -> BaseResponse|None:
+    if await blacklist_refresh_token(refresh_token):
+        await blacklist_access_token(access_token)
+        return LogoutResponse(message="logged out successfully")
+    
 
 
 # @router.post("/login")

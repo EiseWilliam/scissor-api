@@ -3,15 +3,18 @@ from typing import Annotated, Any
 from fastapi import Depends, HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
+
 from app.core.backend import auth as security
 from app.core.backend.auth import cookie_scheme, oauth2_scheme
 from app.db.database import db as simple_db
 from app.schemas.user import ReadUser
-from app.services.url import UrlHandler
+from app.services.data.analytics import AnalyticsEngine
+from app.services.qr import QRhandler
+from app.services.url import UrlHandler as Url
 from app.services.user import UserHandler
 
 
-def get_db() -> AsyncIOMotorDatabase:
+def get_db():
     return simple_db
 
 
@@ -26,11 +29,21 @@ user_handler = Annotated[UserHandler, Depends(get_user_handler)]
 
 
 # schemes
-def get_url_handler(db: db) -> UrlHandler:
-    return UrlHandler(db)
+def get_url_handler(db: db) -> Url:
+    return Url(db)
+
+def get_qr_handler(db:db) -> QRhandler:
+    return QRhandler(db)
+
+def get_analytics_engine(db: db) -> AnalyticsEngine:
+    return AnalyticsEngine(db)
 
 
-url_handler = Annotated[UrlHandler, Depends(get_url_handler)]
+AnalyticEngine = Annotated[AnalyticsEngine, Depends(get_analytics_engine)]
+
+UrlHandler = Annotated[Url, Depends(get_url_handler)]
+
+QRMaker= Annotated[QRhandler, Depends(get_qr_handler)]
 
 
 async def get_jwt(token: str = Depends(oauth2_scheme), token2: str = Depends(cookie_scheme)) -> Any:
@@ -40,7 +53,7 @@ async def get_jwt(token: str = Depends(oauth2_scheme), token2: str = Depends(coo
         return token2
 
 
-jwt_scheme = Annotated[str, Depends(get_jwt)]
+JWTScheme = Annotated[str, Depends(get_jwt)]
 
 # async def get_current_user(
 #     token: str = Depends(get_jwt),
@@ -55,7 +68,8 @@ jwt_scheme = Annotated[str, Depends(get_jwt)]
 #     return user
 
 
-async def get_current_user(token: jwt_scheme, handler: user_handler) -> ReadUser:
+async def get_current_user(token: JWTScheme, handler: user_handler) -> ReadUser:
+    print(f"token: {token}")
     if token:
         payload = await security.verify_token(token)
         if not payload:
@@ -68,7 +82,7 @@ async def get_current_user(token: jwt_scheme, handler: user_handler) -> ReadUser
         raise HTTPException(status_code=401, detail="UNAUTHENTICATED")
 
 
-current_user_dep = Annotated[ReadUser, Depends(get_current_user)]
+CurrentUser = Annotated[ReadUser, Depends(get_current_user)]
 
 
 async def get_active_user(
@@ -85,3 +99,7 @@ async def get_superuser(
     if not current_user["is_superuser"]:
         raise HTTPException(status_code=403, detail="NOT_SUPERUSER")
     return current_user
+
+# def get_user_for_limiter(
+# ):
+    

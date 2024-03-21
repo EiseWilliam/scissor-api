@@ -8,7 +8,7 @@ from app.schemas.user import ReadUser
 
 def direct_response(model: BaseModel, *args, **kwargs):
     """
-    Generate a direct response using the provided model.
+    Generate a direct response using the provided model of type BaseModel.
 
     Args:
         model (BaseModel): The model to generate the response from.
@@ -43,6 +43,8 @@ class LoginTokenResponse(BaseResponse):
     access_token: str | None = None
     refresh_token: str | None = None
     
+class LogoutResponse(BaseResponse):
+    message: str = "logged out successfully"
     
 # user responses
 class ProfileResponse(BaseResponse):
