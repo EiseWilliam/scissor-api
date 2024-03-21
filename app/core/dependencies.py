@@ -9,6 +9,7 @@ from app.core.backend.auth import cookie_scheme, oauth2_scheme
 from app.db.database import db as simple_db
 from app.schemas.user import ReadUser
 from app.services.data.analytics import AnalyticsEngine
+from app.services.qr import QRhandler
 from app.services.url import UrlHandler as Url
 from app.services.user import UserHandler
 
@@ -31,6 +32,8 @@ user_handler = Annotated[UserHandler, Depends(get_user_handler)]
 def get_url_handler(db: db) -> Url:
     return Url(db)
 
+def get_qr_handler(db:db) -> QRhandler:
+    return QRhandler(db)
 
 def get_analytics_engine(db: db) -> AnalyticsEngine:
     return AnalyticsEngine(db)
@@ -39,6 +42,8 @@ def get_analytics_engine(db: db) -> AnalyticsEngine:
 AnalyticEngine = Annotated[AnalyticsEngine, Depends(get_analytics_engine)]
 
 UrlHandler = Annotated[Url, Depends(get_url_handler)]
+
+QRMaker= Annotated[QRhandler, Depends(get_qr_handler)]
 
 
 async def get_jwt(token: str = Depends(oauth2_scheme), token2: str = Depends(cookie_scheme)) -> Any:
