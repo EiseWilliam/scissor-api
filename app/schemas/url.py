@@ -9,11 +9,13 @@ class ShortenUrl(BaseModel):
         None, title="Custom alias", description="The custom alias for the shortened URL"
     )
 
+
 class UpdateUrl(BaseModel):
-    original_url: HttpUrl = Field(..., title="Original URL", description="The original URL")
-    short_url: str = Field(..., title="Short URL", description="The short URL")
-    title: str | None = Field(None, title="Title", description="The title of the URL")
-    
+    original_url: HttpUrl | None = Field("", title="Original URL", description="The original URL")
+    short_url: str | None = Field("", title="Short URL", description="The short URL")
+    title: str | None = Field("", title="Title", description="The title of the URL")
+
+
 class Url(Base):
     original_url: HttpUrl = Field(..., title="Original URL", description="The original URL")
     short_url: str = Field(..., title="Short URL", description="The short URL")
@@ -25,8 +27,11 @@ class Url(Base):
     # created_at: str | datetime = Field(None, title="Created At", description="The time the URL was created", examples=["2021-08-01T12:00:00Z"])
     # updated_at: str | datetime = Field(None, title="Updated At", description="The time the URL was last updated", examples=["2021-08-01T12:00:00Z"])
 
+
 class UrlClicks(BaseModel):
     short_urls: list[str]
+
+
 class ListUrl(BaseModel):
     urls: list[Url]
 

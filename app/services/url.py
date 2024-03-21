@@ -81,15 +81,21 @@ class UrlHandler(BaseCRUD):
             {"short_url": short_url, "user_id": user_id}
         )
         if res:
+            print("found apparently")
             return True
+        print("Not found i guess")
         return False
 
-    async def update_url(self, short_url: str, user_id: str | ObjectId, **kwargs):
-        if self._is_owner(short_url, str(user_id)):
+    async def update_url(self, short_url_id: str, user_id: str | ObjectId, **kwargs):
+        if await self._is_owner(short_url_id, str(user_id)):
             res = await self._db_conn.get_collection(self._collection).update_one(
-                {"short_url": short_url}, {"$set": kwargs}
+                {"short_url": short_url_id}, {"$set": kwargs}
             )
             if res.acknowledged:
+                # TODO: make this a celery task
+                if short := kwargs.get("short_url"):
+                    await self.redis.rename(f"analytics:{short_url_id}", f"analytics:{short}")
+                    await self.redis.rename(short_url_id, short)
                 return True
         raise ForbiddenException("You are not the owner of this URL")
 
@@ -97,6 +103,9 @@ class UrlHandler(BaseCRUD):
         if self._is_owner(short_url, str(user_id)):
             res = await self._db_conn.get_collection(self._collection).delete_one({"short_url": short_url})
             if res.acknowledged:
+                # TODO: make this a celery task
+                await self.redis.delete(f"analytics:{short_url}")
+                await self.redis.delete(short_url)
                 return True
         raise ForbiddenException("You are not the owner of this URL")
 

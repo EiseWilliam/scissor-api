@@ -125,14 +125,14 @@ async def get_url(short_url, user: CurrentUser, handler: UrlHandler):
 async def update_url(
     short_url, updates: UpdateUrl, user: CurrentUser, handler: UrlHandler
 ):
-    if await handler.update_url(short_url, user.id, **updates.model_dump()):
-        return ORJSONResponse(None, status_code=status.HTTP_204_NO_CONTENT)
+    if await handler.update_url(short_url, user.id, **updates.model_dump(exclude_none=True, exclude_unset=True, exclude_defaults=True)):
+        return ORJSONResponse(None, status_code=200)
 
 
 @router.delete("/my_urls/{short_url}")
 async def delete_url(short_url, user: CurrentUser, handler: UrlHandler):
     if await handler.delete_url(short_url, user.id):
-        return ORJSONResponse(None, status_code=status.HTTP_204_NO_CONTENT)
+        return ORJSONResponse(None, status_code=200)
 
 
 @router.post(
