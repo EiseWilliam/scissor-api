@@ -42,7 +42,7 @@ class RedisSettings(BaseSettings):
     REDIS_URI: str = config("REDIS_URI", default="redis://redis:6379/0")
     REDIS_URL: str = config("REDIS_URL", default="redis://redis:6379/0")
     REDIS_HOST: str = config("REDIS_HOST", default="redis")
-    REDIS_PORT: str = config("REDIS_PORT", default=6379)
+    REDIS_PORT: int = config("REDIS_PORT", default=6379)
     REDIS_USER: str | None = config("REDIS_USER", default=None)
     REDIS_PASS: str | None = config("REDIS_PASS", default=None)
 

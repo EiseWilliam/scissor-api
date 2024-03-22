@@ -22,10 +22,10 @@ def track_activity(short_url: str,ref:str|None,*args):
     if ref is None:
         run_async(analytics_processor.track_click(short_url, *args)) 
         return f"Processed analytics for {short_url}"
-    if ref is "qr":
+    if ref == "qr":
         run_async(analytics_processor.track_scan(short_url, *args)) 
         return f"Processed analytics for {short_url}"
-    if ref is not "qr":
+    if ref != "qr":
         run_async(analytics_processor.track_click(short_url, *args)) 
         return f"Processed analytics for {short_url}"
 

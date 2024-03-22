@@ -1,6 +1,6 @@
 import subprocess
 # worker -l INFO 
-CELERY_COMMAND = "celery -A celery worker -l INFO"
+CELERY_COMMAND = "celery -A app.celery worker -l INFO"
 UVICORN_COMMAND = "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
 def start_celery():
