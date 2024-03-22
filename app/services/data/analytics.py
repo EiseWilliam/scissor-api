@@ -20,13 +20,23 @@ from app.services.data.pipelines import (
 from app.services.data.refine import process_location, process_timeline
 
 AGGREGATION_INTERVAL = settings.AGGREGATION_INTERVAL
+
 REDIS_HOST = settings.REDIS_HOST
+REDIS_PORT = settings.REDIS_PORT
+REDIS_PASSWORD = settings.REDIS_PASS
+REDIS_USERNAME = settings.REDIS_USER
 
 
 class AnalyticsEngine:
     def __init__(self, db_conn: AsyncIOMotorDatabase):
         self._db_conn = db_conn
-        self.redis: Redis = Redis(host=REDIS_HOST, decode_responses=True)
+        self.redis = Redis(
+            host=REDIS_HOST,
+            port=REDIS_PORT,
+            username=REDIS_USERNAME,
+            password=REDIS_PASSWORD,
+            decode_responses=True,
+        )
 
     async def _get_overview_stats(self, short_url: str, start_from: datetime | str | None = None):
         return (

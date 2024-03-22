@@ -8,12 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from redis.asyncio import Redis
 
 from app.core.config.settings import settings
-from app.core.exceptions import (
-    ConflictException,
-    ForbiddenException,
-    NotFoundException,
-    URLNotFoundException,
-)
+from app.core.exceptions import ConflictException, ForbiddenException, NotFoundException, URLNotFoundException
 from app.core.logging import log_this
 from app.core.utils.url import hash_url
 from app.db.database import db
@@ -22,12 +17,20 @@ from app.services.base_crud import BaseCRUD
 from app.services.tasks import populate_preview
 
 REDIS_HOST = settings.REDIS_HOST
-
+REDIS_PORT = settings.REDIS_PORT
+REDIS_PASSWORD = settings.REDIS_PASS
+REDIS_USERNAME = settings.REDIS_USER
 
 class UrlHandler(BaseCRUD):
     def __init__(self, db_conn: AsyncIOMotorDatabase):  # type: ignore
         super().__init__(db_conn, "urls")
-        self.redis = Redis(host=REDIS_HOST, decode_responses=True)
+        self.redis = Redis(
+            host=REDIS_HOST,
+            port=REDIS_PORT,
+            username=REDIS_USERNAME,
+            password=REDIS_PASSWORD,
+            decode_responses=True,
+        )
 
     async def get_url_details(self, short_url: str) -> Url | None:
         result = await self.get(short_url=short_url)
@@ -81,9 +84,7 @@ class UrlHandler(BaseCRUD):
             {"short_url": short_url, "user_id": user_id}
         )
         if res:
-            print("found apparently")
             return True
-        print("Not found i guess")
         return False
 
     async def update_url(self, short_url_id: str, user_id: str | ObjectId, **kwargs):

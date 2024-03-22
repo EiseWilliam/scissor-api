@@ -24,7 +24,7 @@ class Url(Base):
     description: str | None = Field(None, title="Description", description="The description of the URL")
     thumbnail: str | None = Field(None, title="Thumbnail", description="The thumbnail of the URL")
     # user_id: str | None = Field(None, title="User ID", description="The user ID")
-    # created_at: str | datetime = Field(None, title="Created At", description="The time the URL was created", examples=["2021-08-01T12:00:00Z"])
+    # created_at: str | datetime = Fielnpd(None, title="Created At", description="The time the URL was created", examples=["2021-08-01T12:00:00Z"])
     # updated_at: str | datetime = Field(None, title="Updated At", description="The time the URL was last updated", examples=["2021-08-01T12:00:00Z"])
 
 
