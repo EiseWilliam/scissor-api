@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl, root_validator
+from pydantic import BaseModel, Field, HttpUrl, root_validator, validator
 
 from app.schemas.base import Base
 from app.core.config.settings import settings
@@ -26,12 +26,11 @@ class Url(Base):
     description: str | None = Field(None, title="Description", description="The description of the URL")
     thumbnail: str | None = Field(None, title="Thumbnail", description="The thumbnail of the URL")
     
-    @root_validator(pre=True)
-    def add_prefix_to_short_url(cls, values):
-        v = values.get('short_url')
-        if v:
-            values[v] = f"{BASE_URL}/{v}"
-        return values
+    @validator('short_url', pre=True)
+    def add_prefix_to_short_url(cls, value):
+        if value:
+            return f"{BASE_URL}/{value}"
+        return value
     # user_id: str | None = Field(None, title="User ID", description="The user ID")
     # created_at: str | datetime = Fielnpd(None, title="Created At", description="The time the URL was created", examples=["2021-08-01T12:00:00Z"])
     # updated_at: str | datetime = Field(None, title="Updated At", description="The time the URL was last updated", examples=["2021-08-01T12:00:00Z"])
