@@ -28,10 +28,10 @@ class Url(Base):
     thumbnail: str | None = Field(None, title="Thumbnail", description="The thumbnail of the URL")
     
     @validator('full_short_url', pre=True)
-    def add_prefix_to_short_url(cls, value, values):
-        if value:
-            return f"{BASE_URL}/{values.get("short_url")}"
-        return f"{BASE_URL}/{values.get("short_url")}"
+    def add_prefix_to_short_url(cls, v, values):
+        if v:
+            return f"{BASE_URL}/{values.get('short_url')}"
+        return f"{BASE_URL}/{values.get('short_url')}"
 
     # user_id: str | None = Field(None, title="User ID", description="The user ID")
     # created_at: str | datetime = Fielnpd(None, title="Created At", description="The time the URL was created", examples=["2021-08-01T12:00:00Z"])
