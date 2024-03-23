@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, root_validator
 
 from app.schemas.base import Base
 from app.core.config.settings import settings
