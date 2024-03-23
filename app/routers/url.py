@@ -18,40 +18,9 @@ from fastapi.routing import APIRoute
 from pydantic import HttpUrl
 
 router = APIRouter(default_response_class=ORJSONResponse, tags=["url"])
-qr_router = APIRouter(default_response_class=ORJSONResponse, tags=["QR"])
+
 templates = Jinja2Templates(directory="app/templates")
 
-
-@qr_router.post("/qr_code")
-@limiter.limit("5/minute")
-async def generate_qr_code(
-    url: str,
-    options: QROptions,
-    request: Request,
-    handler: UrlHandler,
-    user: CurrentUser,
-    is_short_url: bool = True,
-):
-    """
-    Generate a QR code for the given URL.
-
-    Args:
-        url (str): The URL to generate the QR code for.
-        options (QROptions): The options for customizing the QR code.
-        requests (Request): The request object.
-        handler (UrlHandler): The URL handler object.
-        user (CurrentUser): The current user object.
-        is_short_url (bool, optional): Whether to URL is already shortened. Defaults to True.
-
-    Returns:
-        qr (QRCode): The generated QR code.
-    """
-    if not is_short_url:
-        url = await handler.shorten_url(user.id, url, has_qr=True)
-    host_url = request.base_url
-    full_url = f"{host_url}{url}?ref=qr"
-    qr = build_qr_code(full_url, url, **options.model_dump(exclude_unset=True))
-    return qr
 
 
 @router.get("/verify_custom")
@@ -65,21 +34,6 @@ async def check_custom_alias_availability(
     return await handler.custom_alias_is_available(alias)
 
 
-@qr_router.post("/quick_qr")
-@limiter.limit("5/minute")
-async def create_qr_code(
-    url: str,
-    options: QROptions,
-    request: Request,
-    handler: UrlHandler,
-    is_short_url: bool = False,
-):
-    if not is_short_url:
-        url = await handler.shorten_url("annonymous", url, has_qr=True)
-    host_url = request.base_url
-    full_url = f"{host_url}{url}?ref=qr"
-    qr = build_qr_code(full_url, url, **options.model_dump(exclude_unset=True))
-    return qr
 
 
 @router.post("/shorten", summary="Create a new short link.")
@@ -151,7 +105,6 @@ async def get_url_clicks(short_link: UrlClicks, handler: AnalyticEngine):
 async def get_url_clicks_for_user(
     user: CurrentUser, analytic: AnalyticEngine, handler: UrlHandler
 ):
-    # res = await handler.get_url_analytics(short_link)
     res = await handler.get_user_recent_urls(user.id)
     data = await analytic.get_url_clicks(
         [urldata["short_url"] for urldata in res["urls"]]
@@ -175,9 +128,6 @@ async def forward_to_target_url(
     true_url = await handler.get_original_url(short_link)
  
     referrer, user_agent, ip_address = extract_from_request(request)
-    # background_tasks.add_task(
-    #     analytics.track_click, short_link, true_url, user_agent, ip_address, referrer, datetime.now(UTC)
-    # )
     track_activity.delay(
         short_link,
         ref,
@@ -196,7 +146,6 @@ redirect_route = APIRoute(
     methods=["GET"],
     response_class=RedirectResponse,
     name="redirect",
-    # route_class_override = re.compile(r"/[a-zA-Z0-9]{7}")
 )
 
 details_route = APIRoute(

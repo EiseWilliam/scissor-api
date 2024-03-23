@@ -1,11 +1,13 @@
 import io
 from typing import Literal
 
+from bson import ObjectId
 from fastapi import Request
 import segno
 from fastapi.responses import FileResponse
 from PIL import Image
 
+from app.schemas.qr import ListQR
 from app.services.url import UrlHandler
 
 
@@ -15,12 +17,12 @@ from app.services.url import UrlHandler
 
 
 class QRhandler(UrlHandler):
-    async def get_user_qrs(self, user_id: str):
-        return await (
+    async def get_user_qrs(self, user_id: str | ObjectId):
+        return ListQR(urls=await (
             self._db_conn.get_collection(self._collection)
             .find({"user_id": user_id, "has_qr": True})
             .to_list(None)
-        )
+        ))
         
     async def make_qr_for_short_url(self, short_url: str, request: Request):
         pass
