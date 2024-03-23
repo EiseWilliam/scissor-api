@@ -14,6 +14,9 @@ class QR(Base):
     description: str | None = Field(
         None, title="Description", description="The description of the URL"
     )
+    qr_preview: str | None = None
+    qr_color: str | None = None
+    
 
 
 class QROptions(BaseModel):

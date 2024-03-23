@@ -21,7 +21,7 @@ class UpdateUrl(BaseModel):
 class Url(Base):
     original_url: HttpUrl = Field(..., title="Original URL", description="The original URL")
     short_url: str = Field(..., title="Short URL", description="The short URL")
-    full_short_url: str = Field(..., title="Short URL", description="The short URL")
+    full_short_url: str|None = Field(None, title="Short URL", description="The short URL")
     has_qr: bool = False
     title: str | None = Field(None, title="Title", description="The title of the URL")
     description: str | None = Field(None, title="Description", description="The description of the URL")
