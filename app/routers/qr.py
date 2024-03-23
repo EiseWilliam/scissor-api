@@ -5,7 +5,6 @@ from fastapi.responses import ORJSONResponse
 
 from app.core.dependencies import CurrentUser, QRMaker, UrlHandler
 from app.core.responses import direct_response
-from app.core.responses import direct_response
 from app.routers.limiter import limiter
 from app.schemas.qr import QROptions
 from app.services.qr import build_qr_code
@@ -23,7 +22,7 @@ async def create_qr_code(
     is_short_url: bool = False,
 ):
     if not is_short_url:
-        url = await handler.shorten_url("annonymous", url, has_qr=True)
+        url = await handler.shorten_url("anonymous", url, has_qr=True)
     host_url = request.base_url
     full_url = f"{host_url}{url}?ref=qr"
     qr = build_qr_code(full_url, url, **options.model_dump(exclude_unset=True))
@@ -36,9 +35,8 @@ async def generate_qr_code(
     url: str,
     options: QROptions,
     request: Request,
-    handler: UrlHandler,
+    handler: QRMaker,
     user: CurrentUser,
-    is_short_url: bool = True,
 ):
     """
     Generate a QR code for the given URL.
@@ -54,11 +52,13 @@ async def generate_qr_code(
     Returns:
         qr (QRCode): The generated QR code.
     """
-    if not is_short_url:
-        url = await handler.shorten_url(user.id, url, has_qr=True)
-    host_url = request.base_url
-    full_url = f"{host_url}{url}?ref=qr"
-    qr = build_qr_code(full_url, url, **options.model_dump(exclude_unset=True))
+    # if not is_short_url:
+    #     url = await handler.shorten_url(user.id, url, has_qr=True)
+    # host_url = request.base_url
+    # full_url = f"{host_url}{url}?ref=qr"
+    # qr = build_qr_code(full_url, url, **options.model_dump(exclude_unset=True))
+    # return qr
+    qr = await handler.make_qr_for_short_url(url, options.color, request)
     return qr
 
 

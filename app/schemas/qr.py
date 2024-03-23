@@ -18,7 +18,6 @@ class QR(Base):
 
 class QROptions(BaseModel):
     color: str = "blue"
-    mid_logo: str | None = None
     
 class QRDetails(QR):
     qr_preview: str | None = None

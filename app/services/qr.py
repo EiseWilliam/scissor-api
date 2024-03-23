@@ -4,7 +4,7 @@ from typing import Literal
 from bson import ObjectId
 from fastapi import Request
 import segno
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from PIL import Image
 
 from app.schemas.qr import ListQR
@@ -24,8 +24,14 @@ class QRhandler(UrlHandler):
             .to_list(None)
         ))
         
-    async def make_qr_for_short_url(self, short_url: str, request: Request):
-        pass
+    async def make_qr_for_short_url(self, short_url: str, color: str, request: Request):
+        host_url = request.base_url
+        full_url = f"{host_url}{short_url}?ref=qr"
+        qr = build_without_logo_qr_code(full_url, color=color, scale=5)
+        await self._db_conn.get_collection(self._collection).update_one(
+            short_url, {"$set": {"has_qr": True, "qr_color": color, "qr_preview": qr}}
+        )
+        return qr
 
     async def download_qr(self, short_url: str, format: Literal["jpg","svg", "png"], request: Request):
         host_url = request.base_url
@@ -33,8 +39,8 @@ class QRhandler(UrlHandler):
         out = io.BytesIO()
         segno.make(full_url, error="h").save(out, scale=5, kind=format)
         out.seek(0)  # Important to let Pillow load the PNG
-        headers = {"Content-Disposition": 'attachment; filename="filename.xlsx"'}
-        return FileResponse(out, headers=headers)
+        url = await self._db_conn.get_collection(self._collection).find_one({"short_url":short_url})
+        return build_qr_code(full_url, short_url, color=url.get("qr_color", "blue"), scale=5)
 
 
 def build_qr_code(url: str, name: str, color: str = "blue", scale: int = 5):
@@ -63,7 +69,7 @@ def build_qr_code(url: str, name: str, color: str = "blue", scale: int = 5):
     img.save(f"app/static/qr/{name}.png", scale=scale, dark=color)
     return FileResponse(f"app/static/qr/{name}.png")
 
-def build_without_logo_qr_code(url: str, name: str, color: str = "blue", scale: int = 5):
+def build_without_logo_qr_code(url: str, color: str = "blue", scale: int = 5):
     out = io.BytesIO()
     segno.make(url, error="h").save(out, scale=5, kind="svg", dark=color)
     out.seek(0)
