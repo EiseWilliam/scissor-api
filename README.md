@@ -1,4 +1,4 @@
-# URL Shortener
+# Scissor URL Shortener
 
 A high-performance URL shortening service built with a modern tech stack for robust functionality and a smooth user experience.
 
