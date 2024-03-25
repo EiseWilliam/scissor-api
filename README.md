@@ -1,4 +1,4 @@
-# Scissor URL Shortener
+# Scissor URL Shortener API
 
 A high-performance URL shortening service built with a modern tech stack for robust functionality and a smooth user experience.
 
@@ -87,4 +87,8 @@ python3 run.py
 
 ## API Documentation
 View API documentation at [Scissor API Documentation](https://eisewilliam.stoplight.io/docs/scissor/branches/main/5714202d0c9dc-scissors-api)
+
+## UI Implementation
+View the frontend repo at [Scissor Frontend](https://github.com/EiseWilliam/scissor-ui)
+
 
