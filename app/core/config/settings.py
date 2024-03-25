@@ -5,7 +5,9 @@ from fastapi.datastructures import URL
 from pydantic_settings import BaseSettings
 from starlette.config import Config
 
-env_path = os.path.join(os.path.dirname(__file__), ".env")
+
+root_dir = os.path.abspath(os.path.join(__file__, "..", "..", "..", "..")) 
+env_path = os.path.join(root_dir, ".env")
 config = Config(env_path)
 
 
@@ -32,7 +34,7 @@ class ShortServiceSettings(BaseSettings):
 
 
 class CryptSettings(BaseSettings):
-    SECRET_KEY: str = config("SECRET_KEY")
+    SECRET_KEY: str = config("SECRET_KEY", default="secret")
     ALGORITHM: str = config("ALGORITHM", default="HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = config("ACCESS_TOKEN_EXPIRE_MINUTES", default=30)
     REFRESH_TOKEN_EXPIRE_DAYS: int = config("REFRESH_TOKEN_EXPIRE_DAYS", default=7)

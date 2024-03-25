@@ -18,3 +18,73 @@ A high-performance URL shortening service built with a modern tech stack for rob
  - Dockerized Setup.
  - JWT token authentication.
 
+## Local Setup with Docker
+### Prerequisites
+- Docker
+
+### Steps
+1. Clone the repository
+```bash
+git clone https://github.com/EiseWilliam/scissor-api 
+```
+2. Change directory
+```bash
+cd scissor-api
+```
+3. Build the docker images
+```bash
+docker-compose build
+```
+4. Start the services
+```bash
+docker-compose up
+```
+5. Access the API docs at `http://localhost:8000/docs`
+
+
+#### Optional: Change environment variables
+
+If you want to make changes to environment variables like jwt secret key, you can do so by editing the `envsampledocker` file in the root directory and renaming it to `.env`.
+
+by default all env variables for docker setup is defined in `scissor-api/app/core/config/settings.py` file.
+
+## Local Setup without Docker
+### Prerequisites
+- Python 3.10
+- MongoDB
+- Redis
+
+### Steps
+1. Clone the repository
+```bash
+git clone https://github.com/EiseWilliam/scissor-api
+```
+2. Change directory
+```bash
+cd scissor-api
+```
+3. Create a virtual environment
+```bash
+python3 -m venv venv
+```
+4. Activate the virtual environment
+```bash
+source venv/bin/activate
+```
+5. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+6. Environment variables
+```bash
+cp .envsample .env
+```
+7. Start the server
+```bash
+python3 run.py
+```
+8. Access the API docs at `http://localhost:8000/docs`
+
+## API Documentation
+View API documentation at `https://eisewilliam.stoplight.io/docs/scissor/branches/main/5714202d0c9dc-scissors-api`
+
