@@ -86,5 +86,5 @@ python3 run.py
 8. Access the API docs at `http://localhost:8000/docs`
 
 ## API Documentation
-View API documentation at `https://eisewilliam.stoplight.io/docs/scissor/branches/main/5714202d0c9dc-scissors-api`
+View API documentation at [Scissor API Documentation](https://eisewilliam.stoplight.io/docs/scissor/branches/main/5714202d0c9dc-scissors-api)
 
